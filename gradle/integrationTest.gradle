@@ -1,0 +1,47 @@
+sourceSets {
+    itest {
+        java {
+            //Add classes from the main source set to the compilation class path.
+            // These may be needed to compile integration test source code
+            compileClasspath += sourceSets.main.output
+
+            //Add classes from the main source set to the runtime class path
+            //These may be needed to run integration test
+            runtimeClasspath += sourceSets.main.output
+
+            //Provide source directory
+            srcDir file('src/itest/java')
+        }
+        //Provide resource directory
+        resources.srcDir file('src/itest/resources')
+    }
+
+}
+
+configurations {
+    //Extending ensures the declared dependencies of production code (in main source code)
+    // also become dependencies of the integration tests
+
+    //implementation: Classes available at compile time and runtime
+    // but hides the internal dependency of the module to its consumer
+    itestImplementation.extendsFrom implementation
+
+    //runtimeOnly: Classes available at run time only
+    itestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+//Adding Junit dependency for the integration test
+dependencies {
+    itestImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+}
+
+//Custom gradle task to run the integration test
+task itest(type: Test) {
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+    description = "Run integration tests"
+    group = "verification"
+    testClassesDirs = sourceSets.itest.output.classesDirs
+    classpath = sourceSets.itest.runtimeClasspath
+}
